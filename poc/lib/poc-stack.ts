@@ -92,5 +92,3 @@ export class PocStack extends cdk.Stack {
     });
   }
 }
-git config --global user.email "prajotkulkarni.bgm@gmail.com"
-git config --global user.name "prajot"
