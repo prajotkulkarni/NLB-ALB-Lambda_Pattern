@@ -2,7 +2,9 @@ name: Display Comment on PR Creation
 
 on:
   pull_request:
-    types: [opened]
+    branches:
+      - main
+      - test
 
 jobs:
   display_comment:
