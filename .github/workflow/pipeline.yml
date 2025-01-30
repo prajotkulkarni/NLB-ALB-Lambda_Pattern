@@ -1,17 +1,15 @@
-name: test
+name: PR Hello World
 
 on:
   pull_request:
-    branches:
-      - main
-      - test
+    types: [opened]
 
 jobs:
-  win-job:
-    runs-on: windows-latest
+  say_hello:
+    runs-on: ubuntu-latest
     steps:
-      - run: node --version
-      - run: npm --version
-      - run: docker --version
-      # - run: docker --help
-      - run: echo "hello world"
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Say Hello
+        run: echo "Hello World"
