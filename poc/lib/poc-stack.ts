@@ -22,12 +22,19 @@ export class PocStack extends cdk.Stack {
       handler: 'index.handler', 
       code: lambda.Code.fromInline(`
         exports.handler = async function(event) {
-        return {
-        statusCode: 200,
-        body: JSON.stringify('Hello World from Load Balancers'),
+          return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'text/html' },
+            body: \`
+              <html>
+                <body>
+                  <h1>Hello World from Load Balancers</h1>
+                </body>
+              </html>
+            \`,
+          };
         };
-        };
-        `), 
+      `), 
     });
 
     const AppLoadBalancer = new elbv2.ApplicationLoadBalancer(this, 'AppLoadBalancer', {
