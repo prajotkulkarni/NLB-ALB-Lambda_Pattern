@@ -1,18 +1,29 @@
-name: Display Comment on PR
+name: Display Comment on PR Creation
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request:
+    types: [opened]
+    branches:
+      - main
 
 jobs:
   display_comment:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Validate Comment
+        id: validate_comment
+        run: |
+          if [[ -z "${{ github.event.pull_request.body }}" ]]; then
+            echo "Error: Pull request must contain a comment."
+            exit 1
+          fi
+
       - name: Display Comment
         run: |
-          echo "New Comment on Pull Request #${{ github.event.issue.number }}"
-          echo "Comment by @${{ github.event.comment.user.login }}:"
-          echo "${{ github.event.comment.body }}"
+          echo "New Pull Request from 'test' to 'main'"
+          echo "Comment by @${{ github.event.pull_request.user.login }}:"
+          echo "${{ github.event.pull_request.body }}"
