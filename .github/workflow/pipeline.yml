@@ -1,8 +1,6 @@
 name: PR Hello World
 
-on:
-  pull_request:
-    types: [opened]
+on: push
 
 jobs:
   say_hello:
