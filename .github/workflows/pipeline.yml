@@ -6,7 +6,7 @@ on:
       - test
 
 jobs:
-  deploy:
+  AWS_CDK_Deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,3 +40,6 @@ jobs:
         run: |
           cd poc
           cdk deploy --app "npx ts-node --prefer-ts-exts bin/poc.ts" --require-approval never
+
+      - name: CDK Deployed
+        run: echo "CDK Deployed Successfully"
