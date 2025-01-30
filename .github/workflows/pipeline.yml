@@ -1,10 +1,10 @@
 name: AWS Workflow
 
 on:
-  pull_request:
-    types: [opened]
+  push:
     branches:
-      - main
+      - test
+
 
 jobs:
   AWS_Workflow:
