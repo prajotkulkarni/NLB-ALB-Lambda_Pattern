@@ -1,0 +1,18 @@
+name: Display Comment on PR
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  display_comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Display Comment
+        run: |
+          echo "New Comment on Pull Request #${{ github.event.issue.number }}"
+          echo "Comment by @${{ github.event.comment.user.login }}:"
+          echo "${{ github.event.comment.body }}"
