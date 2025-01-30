@@ -25,5 +25,5 @@ jobs:
         run: npm install -g aws-cdk
 
       - name: Deploy CDK stack
-        run: cdk deploy --require-approval never
+        run: cdk deploy --app "npx ts-node --prefer-ts-exts bin/poc.ts" --require-approval never
 
