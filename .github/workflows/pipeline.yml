@@ -5,6 +5,7 @@ on:
     types: [opened]
     branches:
       - main
+      - test
 
 jobs:
   display_comment:
