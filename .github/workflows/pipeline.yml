@@ -1,30 +1,45 @@
-name: Display Comment on PR Creation
+name: CDK Deploy
 
 on:
-  pull_request:
-    types: [opened]
+  push:
     branches:
-      - main
       - test
 
 jobs:
-  display_comment:
+  AWS_CDK_Deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Validate Comment
-        id: validate_comment
-        run: |
-          if [[ -z "${{ github.event.pull_request.body }}" ]]; then
-            echo "Error: Pull request must contain a comment."
-            exit 1
-          fi
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
 
-      - name: Display Comment
+      - name: Navigate to project directory
+        run: cd poc
+
+      - name: Install dependencies
         run: |
-          echo "New Pull Request from 'test' to 'main'"
-          echo "Comment by @${{ github.event.pull_request.user.login }}:"
-          echo "${{ github.event.pull_request.body }}"
+          cd poc
+          npm install
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Deploy CDK stack
+        run: |
+          cd poc
+          cdk deploy --app "npx ts-node --prefer-ts-exts bin/poc.ts" --require-approval never
+
+      - name: CDK Deployed
+        run: echo "CDK Deployed Successfully"
