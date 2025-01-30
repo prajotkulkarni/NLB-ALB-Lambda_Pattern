@@ -1,4 +1,4 @@
-name: Display Comment on PR Creation
+name: test
 
 on:
   pull_request:
@@ -7,23 +7,11 @@ on:
       - test
 
 jobs:
-  display_comment:
-    runs-on: ubuntu-latest
-
+  win-job:
+    runs-on: windows-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Validate Comment
-        id: validate_comment
-        run: |
-          if [[ -z "${{ github.event.pull_request.body }}" ]]; then
-            echo "Error: Pull request must contain a comment."
-            exit 1
-          fi
-
-      - name: Display Comment
-        run: |
-          echo "New Pull Request from 'test' to 'main'"
-          echo "Comment by @${{ github.event.pull_request.user.login }}:"
-          echo "${{ github.event.pull_request.body }}"
+      - run: node --version
+      - run: npm --version
+      - run: docker --version
+      # - run: docker --help
+      - run: echo "hello world"
