@@ -10,7 +10,13 @@ import { CfnOutput } from 'aws-cdk-lib'
 
 export class PocStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+    super(scope, id, {
+      env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION
+      },
+      ...props
+    });
 
     const vpc = ec2.Vpc.fromLookup(this, 'VPC', { 
       vpcName: 'vpc' 

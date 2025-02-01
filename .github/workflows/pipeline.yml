@@ -1,9 +1,9 @@
 name: CDK Deploy
 
 on:
-  push:
+  pull_request:
     branches:
-      - test
+      - main
 
 jobs:
   AWS_CDK_Deploy:

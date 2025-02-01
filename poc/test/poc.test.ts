@@ -1,17 +1,37 @@
-// import * as cdk from 'aws-cdk-lib';
-// import { Template } from 'aws-cdk-lib/assertions';
-// import * as Poc from '../lib/poc-stack';
+// test/poc.test.ts
+import * as cdk from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
+import { PocStack } from '../lib/poc-stack';
 
-// example test. To run these tests, uncomment this file along with the
-// example resource in lib/poc-stack.ts
-test('SQS Queue Created', () => {
-//   const app = new cdk.App();
-//     // WHEN
-//   const stack = new Poc.PocStack(app, 'MyTestStack');
-//     // THEN
-//   const template = Template.fromStack(stack);
+test('Load Balancer and Lambda Exist', () => {
+  const app = new cdk.App();
 
-//   template.hasResourceProperties('AWS::SQS::Queue', {
-//     VisibilityTimeout: 300
-//   });
+  // Set up the environment configuration
+  const env = {
+    account: process.env.CDK_DEFAULT_ACCOUNT || '481331750683', // Use fallback account ID
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',      // Use fallback region
+  };
+
+  // Create the stack with environment configuration
+  const stack = new PocStack(app, 'PocStack', { env });
+
+  const template = Template.fromStack(stack);
+
+  // Check if Application Load Balancer is created
+  template.hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+    Type: 'application',
+    Scheme: 'internet-facing',
+  });
+
+  // Check if Network Load Balancer is created
+  template.hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+    Type: 'network',
+    Scheme: 'internet-facing',
+  });
+
+  // Check if Lambda Function is created
+  template.hasResourceProperties('AWS::Lambda::Function', {
+    Runtime: 'nodejs22.x',
+    Handler: 'index.handler',
+  });
 });

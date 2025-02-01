@@ -3,8 +3,11 @@ import * as cdk from 'aws-cdk-lib';
 import { PocStack } from '../lib/poc-stack';
 
 const app = new cdk.App();
-new PocStack(app, 'PocStack', {
-  
-  env: { account: '481331750683', region: 'us-east-1' },
 
+// Set the environment variables
+process.env.CDK_DEFAULT_ACCOUNT = '481331750683';
+process.env.CDK_DEFAULT_REGION = 'us-east-1';
+
+new PocStack(app, 'PocStack', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
 });
