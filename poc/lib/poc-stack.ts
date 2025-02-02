@@ -4,28 +4,25 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as targets from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { CfnOutput } from 'aws-cdk-lib'
+import { CfnOutput } from 'aws-cdk-lib';
 
-export class PocStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, {
-      env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: process.env.CDK_DEFAULT_REGION
-      },
-      ...props
-    });
+interface NlbAlbLambdaPatternProps {
+  readonly lambdaName: string;
+  readonly albName: string;
+  readonly nlbName: string;
+  readonly AlbTargetGroupCDK: string;
+}
 
-    const vpc = ec2.Vpc.fromLookup(this, 'VPC', { 
-      vpcName: 'vpc' 
-    });
-    const sgForcdk = ec2.SecurityGroup.fromSecurityGroupId(this, 'forcdk', 'sg-0d02f9bcd110a67fa');
+export class NlbAlbLambdaPattern extends Construct {
+  constructor(scope: Construct, id: string, props: NlbAlbLambdaPatternProps) {
+    super(scope, id);
 
-    const CDKlambda = new lambda.Function(this, 'CDKlambda', { 
-      runtime: lambda.Runtime.NODEJS_22_X, 
-      handler: 'index.handler', 
+    const vpc = ec2.Vpc.fromLookup(this, 'VPC', { vpcName: 'vpc' });
+    const securityGroup = ec2.SecurityGroup.fromSecurityGroupId(this, 'forcdk', 'sg-0d02f9bcd110a67fa');
+
+    const lambdaFunction = new lambda.Function(this, props.lambdaName, {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
       code: lambda.Code.fromInline(`
         exports.handler = async function(event) {
           return {
@@ -40,68 +37,66 @@ export class PocStack extends cdk.Stack {
             \`,
           };
         };
-      `), 
+      `),
     });
 
-    const AppLoadBalancer = new elbv2.ApplicationLoadBalancer(this, 'AppLoadBalancer', {
+    const appLoadBalancer = new elbv2.ApplicationLoadBalancer(this, props.albName, {
       vpc,
       internetFacing: true,
-      securityGroup: sgForcdk,
+      securityGroup,
     });
-    const ALBlistener = AppLoadBalancer.addListener('AppLoadBalancerListener', { port: 80 });
-    ALBlistener.addTargets('AppLoadBalancerTargets', {
-      targets: [new targets.LambdaTarget(CDKlambda)],
+    const albListener = appLoadBalancer.addListener('AppLoadBalancerListener', { port: 80 });
+    albListener.addTargets('AppLoadBalancerTargets', {
+      targets: [new targets.LambdaTarget(lambdaFunction)],
       healthCheck: {
         enabled: true,
-      }
+      },
     });
 
-    new CfnOutput(this, 'ALBDNSName', { 
-      value: AppLoadBalancer.loadBalancerDnsName, 
-    }); 
-
-    new CfnOutput(this, 'ALBArn', { 
-      value: AppLoadBalancer.loadBalancerArn, 
+    new CfnOutput(this, 'ALBDNSName', {
+      value: appLoadBalancer.loadBalancerDnsName,
     });
 
+    new CfnOutput(this, 'ALBArn', {
+      value: appLoadBalancer.loadBalancerArn,
+    });
 
-    const NetworkLoadBalancer = new elbv2.NetworkLoadBalancer(this, 'NetLoadBalancer', {
+    const netLoadBalancer = new elbv2.NetworkLoadBalancer(this, props.nlbName, {
       vpc,
       internetFacing: true,
-      securityGroups: [sgForcdk],
+      securityGroups: [securityGroup],
       ipAddressType: elbv2.IpAddressType.IPV4,
     });
-    
-    const albTargetGroup = new elbv2.CfnTargetGroup(this, 'AlbTargetGroupCDK', { 
-      vpcId: vpc.vpcId, 
-      port: 80, 
-      protocol: 'TCP', 
-      healthCheckEnabled: true, 
-      healthCheckPath: '/', 
+
+    const albTargetGroup = new elbv2.CfnTargetGroup(this, props.AlbTargetGroupCDK, {
+      vpcId: vpc.vpcId,
+      port: 80,
+      protocol: 'TCP',
+      healthCheckEnabled: true,
+      healthCheckPath: '/',
       healthCheckPort: '80',
-      healthCheckProtocol: 'HTTP', 
-      healthCheckIntervalSeconds: 30, 
-      healthCheckTimeoutSeconds: 5, 
-      healthyThresholdCount: 2, 
-      unhealthyThresholdCount: 2, 
-      targetType: 'alb', 
-      targets: [{ id: AppLoadBalancer.loadBalancerArn, port: 80 }],
-      name: 'cfnCDKAlbTargetGroup', 
+      healthCheckProtocol: 'HTTP',
+      healthCheckIntervalSeconds: 30,
+      healthCheckTimeoutSeconds: 5,
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 2,
+      targetType: 'alb',
+      targets: [{ id: appLoadBalancer.loadBalancerArn, port: 80 }],
+      name: 'cfnCDKAlbTargetGroup',
     });
 
-    new elbv2.CfnListener(this, 'NlbListener', { 
-      loadBalancerArn: NetworkLoadBalancer.loadBalancerArn, 
-      port: 80, 
-      protocol: 'TCP', 
-      defaultActions: [{ 
-        type: 'forward', 
-        targetGroupArn: albTargetGroup.ref, 
-      }], 
+    new elbv2.CfnListener(this, 'NlbListener', {
+      loadBalancerArn: netLoadBalancer.loadBalancerArn,
+      port: 80,
+      protocol: 'TCP',
+      defaultActions: [{
+        type: 'forward',
+        targetGroupArn: albTargetGroup.ref,
+      }],
     });
-    
-    
-    new CfnOutput(this, 'NLBDNSName', { 
-      value: NetworkLoadBalancer.loadBalancerDnsName, 
+
+    new CfnOutput(this, 'NLBDNSName', {
+      value: netLoadBalancer.loadBalancerDnsName,
     });
   }
 }
