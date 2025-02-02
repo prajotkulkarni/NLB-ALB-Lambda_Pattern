@@ -1,19 +1,23 @@
-// test/poc.test.ts
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { PocStack } from '../lib/poc-stack';
+import { PocStack } from '../lib/pocl3';
 
 test('Load Balancer and Lambda Exist', () => {
   const app = new cdk.App();
 
-  // Set up the environment configuration
   const env = {
-    account: process.env.CDK_DEFAULT_ACCOUNT || '481331750683', // Use fallback account ID
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',      // Use fallback region
+    account: '123456789012',
+    region: 'us-east-1',
   };
 
   // Create the stack with environment configuration
-  const stack = new PocStack(app, 'PocStack', { env });
+  const stack = new PocStack(app, 'TestPocStack', {
+    env,
+    lambdaName: 'MyLambdaFunction',
+    albName: 'MyApplicationLoadBalancer',
+    nlbName: 'MyNetworkLoadBalancer',
+    AlbTargetGroupCDK: 'MyAlbTargetGroup',
+  });
 
   const template = Template.fromStack(stack);
 

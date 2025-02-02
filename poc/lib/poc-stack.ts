@@ -6,11 +6,12 @@ import * as targets from 'aws-cdk-lib/aws-elasticloadbalancingv2-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { CfnOutput } from 'aws-cdk-lib';
 
-interface NlbAlbLambdaPatternProps {
+interface NlbAlbLambdaPatternProps extends cdk.StackProps {
   readonly lambdaName: string;
   readonly albName: string;
   readonly nlbName: string;
   readonly AlbTargetGroupCDK: string;
+  readonly env?: cdk.Environment;
 }
 
 export class NlbAlbLambdaPattern extends Construct {
